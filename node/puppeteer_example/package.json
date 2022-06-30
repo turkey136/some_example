@@ -1,0 +1,24 @@
+{
+  "name": "src",
+  "version": "1.0.0",
+  "description": "## ライブラリ - Moca",
+  "main": "test.js",
+  "scripts": {
+    "test": "mocha ./**.js --timeout 100000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/turkey136/puppeteer_example.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/turkey136/puppeteer_example/issues"
+  },
+  "homepage": "https://github.com/turkey136/puppeteer_example#readme",
+  "dependencies": {
+    "mocha": "^10.0.0",
+    "puppeteer": "^15.0.0"
+  }
+}
