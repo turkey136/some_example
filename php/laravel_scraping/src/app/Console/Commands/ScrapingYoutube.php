@@ -3,7 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Goutte;
+use Google_Client;
+use Google_Service_YouTube;
 
 class ScrapingYoutube extends Command
 {
@@ -28,42 +29,43 @@ class ScrapingYoutube extends Command
      */
     public function handle()
     {
-        $youtubePath = 'https://www.youtube.com/feed/trending?persist_gl=1&gl=JP';
-        $client = new Goutte\Client();
-        $crawler = $client->request('GET', $youtubePath);
-        $crawler->each(function ($node) {
-            if (preg_match("/var ytInitialData =/",  $node->text())) {
-                print $node->text()."\n";
-                $json = preg_replace("/.+var ytInitialData = /", "", $node->text());
-                $json = preg_replace("/;if .+/", '', $json);
-                $json = json_decode($json, true);
+        $todayData = [];
+        $search_results = $this->getYoutubeData();
+        foreach ($search_results['items'] as $search_result) {
+            $todayData = [
+                'videoId' => $search_result['id'],
+                'title' => $search_result['snippet']['title'],
+                'description' => $search_result['snippet']['description'],
+                'channelId' => $search_result['snippet']['channelId'],
+                'channelName' => $search_result['snippet']['channelTitle'],
+            ];
+        }
 
-                // 急上昇1件目を取り出し
-                $data = $json['contents']['twoColumnBrowseResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][0]['shelfRenderer']['content']['expandedShelfContentsRenderer']['items'][0]['videoRenderer'];
-
-                $todayData = [
-                    'videoId' => $data['videoId'],
-                    'title' => $data['title']['runs'][0]['text'],
-                    'description' => $data['descriptionSnippet']['runs'][0]['text'],
-                    'channel' => [
-                        'name' => $data['longBylineText']['runs'][0]['text'],
-                        'url' => $data['longBylineText']['runs'][0]['navigationEndpoint']['browseEndpoint']['canonicalBaseUrl']
-                    ]
-                ];
-
-                $youtubeJsonFilePath = 'storage/app/public/buzz_tube.json';
-                $buzzTubeData = [];
-                if (file_exists($youtubeJsonFilePath)) {
-                  $buzzTubeData = file_get_contents($youtubeJsonFilePath);
-                  $buzzTubeData = json_decode($buzzTubeData, true);
-                }
-                $buzzTubeData[date("Y-m-d")] = $todayData;
-                file_put_contents($youtubeJsonFilePath, json_encode($buzzTubeData));
-
-                //eval(\Psy\sh());
-            }
-        });
+        // file 出力
+        $youtubeJsonFilePath = 'storage/app/public/buzz_tube.json';
+        $buzzTubeData = [];
+        if (file_exists($youtubeJsonFilePath)) {
+          $buzzTubeData = file_get_contents($youtubeJsonFilePath);
+          $buzzTubeData = json_decode($buzzTubeData, true);
+        }
+        $buzzTubeData[date("Y-m-d")] = $todayData;
+        file_put_contents($youtubeJsonFilePath, json_encode($buzzTubeData));
 
         return 0;
+    }
+
+    private function getYoutubeData()
+    {
+        $client = new Google_Client();
+        $client->setDeveloperKey(env('YOUTUBE_KEY'));
+        $youtube = new Google_Service_YouTube($client);
+         $part = ['snippet'];
+        $params = [
+            'chart' => 'mostPopular',
+            'maxResults' => 1,
+            'regionCode' => 'JP',
+        ];
+
+        return $youtube->videos->listVideos($part, $params);
     }
 }
