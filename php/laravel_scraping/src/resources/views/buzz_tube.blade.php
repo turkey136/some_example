@@ -41,7 +41,7 @@
             .tooltips {
               display: none;
               position: absolute;
-              bottom: -2.5em;
+              bottom: -7.5em;
               z-index: 1000;
               padding: 0.5em;
               color: #000000;
@@ -60,7 +60,7 @@
               border-top:8px solid transparent;
               border-left:8px solid #FFFFFF;
             }
-            a:hover .tooltips {
+            .dictionary:hover .tooltips {
               display: block;
             }
             .video_name {
@@ -108,16 +108,18 @@
                 var video = `
                   <a href="https://www.youtube.com/watch?v=${ data['videoId'] }" target="_blank">
                     <img class="thumbnail" src="https://img.youtube.com/vi/${  data['videoId'] }/default.jpg"/>
+                  </a>
+                  <p class="video_name ${ today === info.event.title ? 'today' : '' }">
+                    ${ data['channelName'] }
+                  </>
+                  <div class="dictionary ${ today === info.event.title ? 'today' : '' }" ontouchstart="">
+                    <img src="icon/dictionary.svg" alt="ロゴ" width="20" height="20">
                     <div class="tooltips">
                       ${ data['title'] }
                       <BR><BR>
                        ${ 50 < data['description'].length ? data['description'].slice(0, 49) + '…' : data['description'] }
                     </div>
-                  </a>
-                  <p class="video_name ${ today === info.event.title ? 'today' : '' }">
-                    ${ data['channelName'] }
-                  </>
-
+                  </div>
                 `
                 return { html: video }
               }
