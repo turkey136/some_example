@@ -3,23 +3,16 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>BuzzTube 昨日は何がバズった？</title>
-        <!-- Fonts -->
+        <title>YouTube 昨日は何がバズった？</title>
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
-        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
         <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.0/main.min.css' rel='stylesheet' />
-        <!-- Styles -->
         <style>
             html, body {
                 background-color: #fff;
                 color: #636b6f;
                 font-family: 'Nunito', sans-serif;
                 font-weight: 200;
-                height: 100vh;
                 margin: 0;
-            }
-            .full-height {
-                height: 100vh;
             }
             .flex-center {
                 align-items: center;
@@ -28,26 +21,14 @@
             }
             .position-ref {
                 position: relative;
-            }
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
+                max-width: 90%;
+                padding-left: 5%;
             }
             .content {
                 text-align: center;
             }
             .title {
-                font-size: 84px;
-            }
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 13px;
-                font-weight: 90%;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
+                font-size: 60px;
             }
             .m-b-md {
                 margin-bottom: 30px;
@@ -57,47 +38,88 @@
               width: 100%;
               aspect-ratio: 16 / 9;
             }
+            .tooltips {
+              display: none;
+              position: absolute;
+              bottom: -2.5em;
+              z-index: 1000;
+              padding: 0.5em;
+              color: #000000;
+              background: #FFFFFF;
+              border-radius: 0.5em;
+              white-space: normal;
+              width: 300%;
+            }
+            .tooltips:after {
+              width: 100%;
+              content: "";
+              display: block;
+              position: absolute;
+              left: 0.5em;
+              top: -8px;
+              border-top:8px solid transparent;
+              border-left:8px solid #FFFFFF;
+            }
+            a:hover .tooltips {
+              display: block;
+            }
+            .video_name {
+              white-space: normal;
+              margin: 0;
+            }
+            .calendar {
+              padding-bottom: 100px
+            }
+            .today {
+              background-color: rgba(255,220,40,.15)
+            }
         </style>
         <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.0/main.min.js'></script>
         <script>
-          var json = {
-            'tmp': {
-              url: 'https://www.youtube.com/watch?v=zazoKphTfSU&ab_channel=%E3%81%9F%E3%81%84%E3%81%9F%E3%81%AC',
-              c_name: 'ほげ',
-            },
-            'tmp2': {
-              url: 'https://www.youtube.com/watch?v=NvweSp7xRic',
-              c_name: 'ふが',
-            }
+          var videos = [];
+
+          async function loadJson() {
+            await fetch('storage/buzz_tube.json')
+              .then(result => result.json())
+              .then((output) => {
+                videos = output;
+            });
           };
 
-          document.addEventListener('DOMContentLoaded', function() {
+          document.addEventListener('DOMContentLoaded', async function() {
+            await loadJson();
+            var events = [];
+            for (let key in videos) {
+              events.push({start: key, textColor: '#000000', title: key });
+            };
+            var today = 'YYYY-MM-DD';
+            today = today.replace(/YYYY/, new Date().getFullYear());
+            today = today.replace(/MM/,  String(new Date().getMonth() + 1).padStart(2, '0'));
+            today = today.replace(/DD/,   String(new Date().getDate())).padStart(2, '0');
+
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
               initialView: 'dayGridMonth',
               locale: 'ja',
-              events: [
-                {
-                  start: '2022-08-10',
-                  textColor: '#000000',
-                  title: 'tmp'
-                },
-                 {
-                  start: '2022-08-13',
-                  textColor: '#000000',
-                  title: 'tmp2'
-                }
-              ],
+              events:events,
               eventColor: '#FFFFFF',
               eventContent: function (info) {
-                console.log(info.event.title)
-                var data = json[info.event.title]
-                console.log(data)
-                var video_id = data['url'].replace(/https:\/\/.+\?v=/, '').replace(/&.+/, '');
-                return {
-                  html: '<img src="https://img.youtube.com/vi/' + video_id + '/default.jpg" class="thumbnail"/>' +
-                  '<div>' + info.event.title + '</div>'
-                }
+                var data = videos[info.event.title]
+                var video = `
+                  <a href="https://www.youtube.com/watch?v=${ data['videoId'] }" target="_blank">
+                    <img class="thumbnail" src="https://img.youtube.com/vi/${  data['videoId'] }/default.jpg"/>
+                    <div class="tooltips">
+                      ${ data['title'] }
+                      <BR><BR>
+                       ${ 50 < data['description'].length ? data['description'].slice(0, 49) + '…' : data['description'] }
+                    </div>
+                  </a>
+                  <p class="video_name ${ today === info.event.title ? 'today' : '' }">
+                    ${ data['channelName'] }
+                  </>
+
+                `
+                return { html: video }
               }
             });
             calendar.render();
@@ -105,12 +127,12 @@
         </script>
     </head>
     <body>
-        <div class="flex-center position-ref full-height">
+        <div class="flex-center position-ref">
             <div class="content">
                 <div class="title m-b-md">
                     BuzzTube 昨日は何がバズった？
                 </div>
-                <div id='calendar'></div>
+                <div id='calendar' class="calendar"></div>
             </div>
         </div>
     </body>

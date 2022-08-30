@@ -20,3 +20,10 @@ docker-compose up
 cd docker-compose
 docker-compose run --rm php php artisan command:scrapingYoutube
 ```
+
+- storage を公開
+
+```
+cd docker-compose
+docker-compose run --rm php php artisan storage:link
+```
