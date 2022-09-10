@@ -13,3 +13,6 @@
   - 正規表現処理の比較
 
 ## php
+
+- laravel_scraping
+  - Youtube Data API による動画取得
